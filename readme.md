@@ -115,6 +115,146 @@ The web server provides some basic functionality  to help manage your node. The 
 
 # Configuring Your CorDapp
 
+# How to add a new CorDapp module
+1. Right click the project root and select New -> Module
+2. On the left of the dialog select Gradle, on the right uncheck Java and select Kotlin/JVM, click Next
+3. Enter the name of the new Module e.g. myproject-contract, click finish
+4. Overwrite the new `build.gradle` inside the Module with this for a Workflow CorDapp:
+    ```
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+    }
+    
+    apply plugin: 'kotlin'
+    apply plugin: 'net.corda.plugins.cordapp'
+    
+    cordapp {
+        signing {
+            enabled = true
+        }
+        targetPlatformVersion cordapp_platform_version
+        minimumPlatformVersion cordapp_platform_version
+        workflow {
+            name "Cordacademy Obligation Workflow"
+            vendor "Cordacademy"
+            licence "Apache License, Version 2.0"
+            versionId 1
+        }
+    }
+    
+    dependencies {
+        // Kotlin Dependencies
+        implementation "$kotlin_group:kotlin-stdlib-jdk8:$kotlin_version"
+    
+        // Corda Development Dependencies
+        cordaCompile "$corda_group:corda-core:$corda_release_version"
+    
+        // CorDapp Dependencies
+        cordapp project(":cordacademy-obligation-contract")
+    
+        // Test Dependencies
+        testRuntimeOnly "$junit_group:junit-jupiter-engine:$junit_version"
+        testImplementation "$junit_group:junit-jupiter-api:$junit_version"
+        testImplementation "$kotlin_group:kotlin-test:$kotlin_version"
+        testImplementation "$corda_group:corda-node-driver:$corda_release_version"
+        testImplementation project(":cordacademy-test")
+    }
+    
+    jar { exclude '**/log4j2*.xml' }
+    
+    test {
+        jvmArgs = ["-ea", "-javaagent:../lib/quasar.jar"]
+        useJUnitPlatform()
+    }
+    
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+        kotlinOptions {
+            freeCompilerArgs = ["-Xnormalize-constructor-calls=enable"]
+            languageVersion = "1.2"
+            apiVersion = "1.2"
+            jvmTarget = "1.8"
+            javaParameters = true
+        }
+    }
+    ```
+    
+    Or this for a Contract CorDapp:
+    ```
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://ci-artifactory.corda.r3cev.com/artifactory/corda' }
+        maven { url 'https://repo.gradle.org/gradle/libs-releases' }
+    }
+    
+    apply plugin: 'kotlin'
+    apply plugin: 'net.corda.plugins.cordapp'
+    
+    cordapp {
+        signing {
+            enabled = true
+        }
+        targetPlatformVersion cordapp_platform_version
+        minimumPlatformVersion cordapp_platform_version
+        contract {
+            name "Cordacademy Obligation Contract"
+            vendor "Cordacademy"
+            licence "Apache License, Version 2.0"
+            versionId 1
+        }
+    }
+    
+    dependencies {
+        // Kotlin Dependencies
+        implementation "$kotlin_group:kotlin-stdlib-jdk8:$kotlin_version"
+    
+        // Corda Development Dependencies
+        cordaCompile "$corda_group:corda-core:$corda_release_version"
+    
+        // Test Dependencies
+        testRuntimeOnly "$junit_group:junit-jupiter-engine:$junit_version"
+        testImplementation "$junit_group:junit-jupiter-api:$junit_version"
+        testImplementation "$kotlin_group:kotlin-test:$kotlin_version"
+        testImplementation "$corda_group:corda-node-driver:$corda_release_version"
+        testImplementation project(":cordacademy-test")
+    }
+    
+    jar { exclude '**/log4j2*.xml' }
+    
+    test {
+        jvmArgs = ["-ea", "-javaagent:../lib/quasar.jar"]
+        useJUnitPlatform()
+    }
+    
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+        kotlinOptions {
+            freeCompilerArgs = ["-Xnormalize-constructor-calls=enable"]
+            languageVersion = "1.2"
+            apiVersion = "1.2"
+            jvmTarget = "1.8"
+            javaParameters = true
+        }
+    }
+    ```
+    
+    And update the valures accoringly, including:
+    - cordapp.contract.name
+    - cordapp.contract.vendor
+
+5. Create base directories: `src/main/kotlin` and `src/test/kotlin`
+6. Update the `settings.gradle` file at the root to include your new Module e.g. `include 'myproject-contract'`
+7. There should be a popup in the bottom right regarding Gradle changes click "Import" - this should make your Module folder and the `main` and `test` folders within it have little blue boxes.
+8. Follow the TODOs in the other build.gradle files to ensure your Module is being including where it needs to be.
+9. Ensure you can build the project `./gradlew clean build`
+
+
 Since this template does not contain any CorDapp modules, there is no reason to declare CorDapp configurations. The following code snippets should be added to your CorDapp module `build.gradle` files  and modified accordingly:
 
 #### Contract Modules
